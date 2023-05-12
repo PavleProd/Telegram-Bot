@@ -1,9 +1,12 @@
 import os
 import requests
-from telegram import Update
+from telegram import Update, InputMediaDocument
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+import yt_dlp
 
 TOKEN = "6127757477:AAGeY1acFoXGB2MDdUcA46PIkFi9IKvLPcI"
+allowedImageFormats = ("jpg", "png", "jpeg", "gif", "webp")
+allowedVideoFormats = ("mp4", "mov")
 
 
 # Commands
@@ -12,9 +15,11 @@ async def startCommand(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def isImageURL(url: str) -> bool:
-    if url.startswith("http") and (url.endswith(".jpg") or url.endswith(".png") or url.endswith(".jpeg")):
-        return True
-    return False
+    return any(url.endswith(extension) for extension in allowedImageFormats)
+
+
+def isVideoURL(url: str) -> bool:
+    return any(url.endswith(extension) for extension in allowedVideoFormats)
 
 
 async def downloadImage(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -30,6 +35,22 @@ async def downloadImage(update: Update, context: ContextTypes.DEFAULT_TYPE):
         os.remove("image.jpg")
 
 
+async def downloadVideo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    messageText = update.message.text
+    chat_id = update.message.chat_id
+
+    ydl_opts = {'outtmpl': 'video.mp4', 'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'}
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([messageText])
+
+    # Upload the video to Telegram
+    with open('video.mp4', 'rb') as f:
+        await context.bot.send_media_group(chat_id=chat_id, media=[InputMediaDocument(media=f, filename='video.mp4')])
+
+    # Remove the downloaded video file
+    os.remove('video.mp4')
+
+
 async def messageHandler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.chat.id
     messageText = update.message.text
@@ -39,9 +60,10 @@ async def messageHandler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if isImageURL(messageText):
         await downloadImage(update, context)
+    elif isVideoURL(messageText):
+        await downloadVideo(update, context)
     else:
-        await context.bot.send_message(chat_id=update.effective_chat.id,
-                                       text="URL was invalid. Please send URL ending with .jpg, .png, or .jpeg.")
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="URL for image/video was invalid")
 
 
 def errorHandler(update: Update, context: ContextTypes.DEFAULT_TYPE):
