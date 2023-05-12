@@ -1,6 +1,6 @@
 # Telegram Bot
  
-Simple telegram bot that downloads image with given URL
+Simple telegram bot that downloads image/video with given URL
 
 ## Running
 In terminal, navigate to repository. <br/> 
