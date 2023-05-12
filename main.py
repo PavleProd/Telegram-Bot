@@ -1,44 +1,69 @@
 import os
 import requests
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 TOKEN = "6127757477:AAGeY1acFoXGB2MDdUcA46PIkFi9IKvLPcI"
 
 
-def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             text="Hi, send me an image URL and I'll download and send it back to you!")
+# Commands
+async def startCommand(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Hi, send me an image URL and I'll send the image back to you!")
 
 
-def download_image(update, context):
+def isImageURL(url: str) -> bool:
+    if url.startswith("http") and (url.endswith(".jpg") or url.endswith(".png") or url.endswith(".jpeg")):
+        return True
+    return False
+
+
+async def downloadImage(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.startswith("http") and (text.endswith(".jpg") or text.endswith(".png") or text.endswith(".jpeg")):
-        try:
-            response = requests.get(text)
-            with open("image.jpg", "wb") as f:
-                f.write(response.content)
-            context.bot.send_photo(chat_id=update.effective_chat.id, photo=open("image.jpg", "rb"))
-        except Exception as e:
-            context.bot.send_message(chat_id=update.effective_chat.id, text=f"Sorry, there was an error: {e}")
-        finally:
-            os.remove("image.jpg")
+    try:
+        response = requests.get(text)
+        with open("image.jpg", "wb") as f:
+            f.write(response.content)
+        await context.bot.send_photo(chat_id=update.effective_chat.id, photo=open("image.jpg", "rb"))
+    except Exception as e:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Sorry, there was an error: {e}")
+    finally:
+        os.remove("image.jpg")
+
+
+async def messageHandler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.message.chat.id
+    messageText = update.message.text
+
+    # Log user input
+    print(f'User ({user}): "{messageText}"')
+
+    if isImageURL(messageText):
+        await downloadImage(update, context)
     else:
-        context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text="Sorry, please send a valid image URL ending with .jpg, .png, or .jpeg.")
+        await context.bot.send_message(chat_id=update.effective_chat.id,
+                                       text="URL was invalid. Please send URL ending with .jpg, .png, or .jpeg.")
+
+
+def errorHandler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print(f'Update {update} caused error {context.error}')
 
 
 def main():
-    updater = Updater(token=TOKEN, use_context=True)
-    dispatcher = updater.dispatcher
+    print("Bot initialization...")
+    bot = Application.builder().token(TOKEN).build()
 
-    start_handler = CommandHandler('start', start)
-    download_image_handler = MessageHandler(Filters.text & (~Filters.command), download_image)
+    # Commands
+    bot.add_handler(CommandHandler('start', startCommand))
 
-    dispatcher.add_handler(start_handler)
-    dispatcher.add_handler(download_image_handler)
+    # Messages
+    bot.add_handler(MessageHandler(filters.TEXT, messageHandler))
 
-    updater.start_polling()
-    updater.idle()
+    # Errors
+    bot.add_error_handler(errorHandler)
+
+    # Polling
+    print("Bot started polling...")
+    bot.run_polling()
 
 
 if __name__ == '__main__':
