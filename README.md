@@ -15,4 +15,4 @@ Paste URL with image/video you want to download <br/>
 
 ## Functionalities
 * Download image with given URL(.jpg, .jpeg, .png .webp supported) <br/>
-* Download video with given URL(.mp4, .mov supported). Converts video to .mp4
+* Download video with given URL(.mp4, .mov supported).
