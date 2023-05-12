@@ -7,7 +7,7 @@ In terminal, navigate to repository. <br/>
 docker-compose build to build the image <br/>
 docker-compose up -d to start docker containter
 
-Type /start in @PavleProdanovicBot chat on Telegram.
+Type /start in @PavleProdanovic_bot chat on Telegram.
 Paste URL with image you want to download
 
 ## Functionalities
