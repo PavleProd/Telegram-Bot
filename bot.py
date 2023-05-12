@@ -15,11 +15,11 @@ async def startCommand(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def isImageURL(url: str) -> bool:
-    return any(url.endswith(extension) for extension in allowedImageFormats)
+    return url.startswith("http") and any(url.endswith(extension) for extension in allowedImageFormats)
 
 
 def isVideoURL(url: str) -> bool:
-    return any(url.endswith(extension) for extension in allowedVideoFormats)
+    return url.startswith("http") and any(url.endswith(extension) for extension in allowedVideoFormats)
 
 
 async def downloadImage(update: Update, context: ContextTypes.DEFAULT_TYPE):
