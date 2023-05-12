@@ -14,4 +14,5 @@ Paste URL with image/video you want to download <br/>
 <a href="https://www.vinarijazvonkobogdan.com/sites/default/files/basic-page/images/Optimized-_L8A2622_0_0.jpg">Sample Image</a><br/>
 
 ## Functionalities
-Download image with given URL(.jpg, .jpeg, .png supported) <br/>
+Download image with given URL(.jpg, .jpeg, .png .webp supported) <br/>
+Download video with given URL(.mp4, .mov supported). Converts video to .mp4
